@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>健身記錄助手</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="健身助手">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23D2B48C'/%3E%3Ctext x='50' y='67' font-size='60' text-anchor='middle' fill='%234A2C2A' font-family='system-ui'%3E🏋️%3C/text%3E%3C/svg%3E">
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #FDF8F0;
+            margin: 0;
+            padding: 20px 16px 100px;  /* 增加上下留白 */
+            color: #4A2C2A;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #FFF9F0;
+            border-radius: 28px;
+            padding: 24px 20px;        /* 內部上下內距加大 */
+            margin-bottom: 28px;       /* 卡片之間間距加大 */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .btn {
+            background: #8B5A2B;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #A67B5B;
+            color: #5D3A1A;
+            box-shadow: none;
+        }
+        .btn-outline:active {
+            background: #F0E5D8;
+            transform: translateY(1px);
+        }
+        .btn-danger {
+            background: #B55B4A;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+        }
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 20px;
+            border: 1px solid #E3D5C0;
+            background: #FFFFFF;
+            font-size: 16px;
+            margin-top: 6px;
+            margin-bottom: 18px;  /* 增加表單下方留白 */
+            font-family: inherit;
+        }
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #A67B5B;
+            box-shadow: 0 0 0 2px rgba(166,123,91,0.2);
+        }
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #5D3A1A;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .timer {
+            background: #EBDCC8;
+            border-radius: 60px;
+            padding: 20px 16px;
+            text-align: center;
+            font-size: 48px;          /* 稍微放大數字 */
+            font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 6px;
+            color: #4A2C2A;
+            margin: 16px 0 20px;      /* 上下增加留白 */
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.05), 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .timer-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .record-item {
+            background: #FFF8F0;
+            border-radius: 24px;
+            padding: 16px;
+            margin-bottom: 16px;       /* 項目之間間距加大 */
+            border-left: 6px solid #A67B5B;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .badge {
+            background: #EBDCC8;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #5D3A1A;
+        }
+        .history-date {
+            font-weight: bold;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            font-size: 18px;
+            color: #8B5A2B;
+            border-left: 4px solid #A67B5B;
+            padding-left: 12px;
+        }
+        .reminder-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            width: fit-content;
+        }
+        .reminder-checkbox-label input {
+            width: auto;
+            margin: 0;
+            transform: scale(1.1);
+            accent-color: #8B5A2B;
+        }
+        .reminder-checkbox-label span {
+            font-weight: 600;
+            font-size: 15px;
+            color: #5D3A1A;
+            white-space: nowrap;
+        }
+        .weekdays-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 16px 0 24px;
+            align-items: center;
+        }
+        .day-checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #F5EDE2;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5D3A1A;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .day-checkbox input {
+            width: auto;
+            margin: 0;
+            transform: scale(1.1);
+            accent-color: #8B5A2B;
+        }
+        .day-checkbox span {
+            margin-left: 0;
+        }
+        hr {
+            margin: 24px 0;
+            border: none;
+            height: 1px;
+            background: #E3D5C0;
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .action-buttons .btn,
+        .action-buttons .btn-outline {
+            flex: 1;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .project-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .project-item input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .flex-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        /* 手機版調整 */
+        @media (max-width: 500px) {
+            body { padding: 16px 12px 80px; }
+            .timer { font-size: 40px; letter-spacing: 3px; padding: 16px; }
+            .flex-row { flex-direction: column; align-items: stretch; }
+            .project-item { flex-direction: column; align-items: stretch; }
+            .action-buttons { flex-direction: column; }
+            .action-buttons .btn,
+            .action-buttons .btn-outline {
+                white-space: normal;
+                justify-content: center;
+            }
+            .day-checkbox { white-space: normal; }
+            .reminder-checkbox-label span { white-space: normal; }
+            .card { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+    (function() {
+        // ---------- 儲存邏輯 (無 Service Worker) ----------
+        const STORAGE_PREFIX = 'fitness_';
+        function getUserKey(user, suffix) { return `${STORAGE_PREFIX}${user}_${suffix}`; }
+        
+        const DEFAULT_PROJECTS = ["深蹲", "勾腿", "踢腿", "胸肌", "膊頭", "背肌上", "背肌下", "三頭肌", "二頭肌", "腹肌"];
+        
+        let currentUser = "我";
+        let usersList = ["我"];
+        let phasesTime = {1:160, 2:140, 3:120, 4:100, 5:80};
+        let currentPhase = 1;
+        let projects = [];
+        let records = [];
+        let reminderEnabled = false;
+        let reminderDays = [];
+        let lastReminderWeek = {};
+        
+        function save(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch(e) { console.warn(e); return false; }
+        }
+        function load(key, def) {
+            try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
+        }
+        
+        function saveAll() {
+            save(getUserKey(currentUser, 'projects'), projects);
+            save(getUserKey(currentUser, 'records'), records);
+            save(getUserKey(currentUser, 'phase'), currentPhase);
+            save('global_usersList', usersList);
+            save('global_reminderEnabled', reminderEnabled);
+            save('global_reminderDays', reminderDays);
+            save(getUserKey(currentUser, 'phasesTime'), phasesTime);
+            save(getUserKey(currentUser, 'lastReminderWeek'), lastReminderWeek);
+        }
+        
+        function loadUserData(user) {
+            projects = load(getUserKey(user, 'projects'), DEFAULT_PROJECTS.map(name => ({ name, targetReps: null })));
+            records = load(getUserKey(user, 'records'), []);
+            currentPhase = load(getUserKey(user, 'phase'), 1);
+            phasesTime = load(getUserKey(user, 'phasesTime'), {1:160,2:140,3:120,4:100,5:80});
+            lastReminderWeek = load(getUserKey(user, 'lastReminderWeek'), {});
+        }
+        
+        function loadGlobal() {
+            usersList = load('global_usersList', ["我"]);
+            if (!usersList.includes(currentUser)) currentUser = usersList[0];
+            reminderEnabled = load('global_reminderEnabled', false);
+            reminderDays = load('global_reminderDays', [5]);
+        }
+        
+        function saveGlobal() {
+            save('global_usersList', usersList);
+            save('global_reminderEnabled', reminderEnabled);
+            save('global_reminderDays', reminderDays);
+        }
+        
+        function addUser(name) {
+            if (!name || usersList.includes(name)) return false;
+            usersList.push(name);
+            saveGlobal();
+            save(getUserKey(name, 'projects'), DEFAULT_PROJECTS.map(n => ({ name: n, targetReps: null })));
+            save(getUserKey(name, 'records'), []);
+            save(getUserKey(name, 'phase'), 1);
+            save(getUserKey(name, 'phasesTime'), {1:160,2:140,3:120,4:100,5:80});
+            save(getUserKey(name, 'lastReminderWeek'), {});
+            return true;
+        }
+        
+        function getLastRecordByProject(projectName) {
+            return [...records].reverse().find(r => r.projectName === projectName);
+        }
+        
+        function addRecord(date, projectName, reps, weight, weightUnit, addWeight, minusWeight, note) {
+            records.push({
+                id: Date.now() + Math.random(),
+                date, projectName,
+                reps: parseInt(reps) || 0,
+                weight: parseFloat(weight) || 0,
+                weightUnit,
+                addWeight: parseFloat(addWeight) || 0,
+                minusWeight: parseFloat(minusWeight) || 0,
+                note, phase: currentPhase
+            });
+            saveAll();
+            render();
+        }
+        
+        function deleteRecord(id) {
+            records = records.filter(r => r.id != id);
+            saveAll();
+            render();
+        }
+        
+        function updateRecord(id, updated) {
+            const idx = records.findIndex(r => r.id == id);
+            if (idx !== -1) { records[idx] = { ...records[idx], ...updated }; saveAll(); render(); }
+        }
+        
+        function upgradePhase() {
+            if (currentPhase >= 5) { alert("已經是最高的階段5"); return; }
+            if (confirm(`將從階段${currentPhase}升至階段${currentPhase+1}。項目與目標會複製，新階段的倒數時間請至設定中調整。繼續？`)) {
+                currentPhase++;
+                saveAll();
+                render();
+            }
+        }
+        
+        function checkReminder() {
+            if (!reminderEnabled || reminderDays.length === 0) return;
+            const today = new Date();
+            const todayWeekday = today.getDay();
+            const year = today.getFullYear();
+            const weekNumber = getWeekNumber(today);
+            for (let day of reminderDays) {
+                const prevDay = (day === 0) ? 6 : day-1;
+                if (prevDay === todayWeekday) {
+                    const weekKey = `${year}-W${weekNumber}-${day}`;
+                    if (!lastReminderWeek[weekKey]) {
+                        const tomorrow = new Date(today);
+                        tomorrow.setDate(today.getDate() + 1);
+                        const weekdayName = ['日','一','二','三','四','五','六'][day];
+                        const message = `提醒：明天 (${tomorrow.getMonth()+1}/${tomorrow.getDate()}) 是健身日 (週${weekdayName})，記得訓練！`;
+                        if (window.Notification && Notification.permission === "granted") new Notification("健身提醒", { body: message });
+                        else if (window.Notification && Notification.permission !== "denied") Notification.requestPermission();
+                        alert(message);
+                        lastReminderWeek[weekKey] = true;
+                        saveAll();
+                    }
+                }
+            }
+        }
+        
+        function getWeekNumber(d) {
+            const temp = new Date(d);
+            temp.setHours(0,0,0,0);
+            temp.setDate(temp.getDate() + 3 - (temp.getDay() + 6) % 7);
+            const week1 = new Date(temp.getFullYear(), 0, 4);
+            return 1 + Math.round(((temp - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        }
+        
+        let timerInterval = null, timerSeconds = 0, timerRunning = false;
+        function initTimerDisplay(displayEl, startBtn, pauseBtn, resetBtn) {
+            const phaseSeconds = phasesTime[currentPhase] || 160;
+            if (!timerRunning) timerSeconds = phaseSeconds;
+            updateTimerDisplay(displayEl);
+            startBtn.onclick = () => {
+                if (timerInterval) clearInterval(timerInterval);
+                timerRunning = true;
+                timerInterval = setInterval(() => {
+                    if (timerRunning && timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay(displayEl);
+                        if (timerSeconds === 0) {
+                            clearInterval(timerInterval);
+                            timerRunning = false;
+                            alert("時間到！");
+                            timerSeconds = phasesTime[currentPhase] || 160;
+                            updateTimerDisplay(displayEl);
+                        }
+                    } else if (timerSeconds === 0) {
+                        clearInterval(timerInterval);
+                        timerRunning = false;
+                    }
+                }, 1000);
+            };
+            pauseBtn.onclick = () => { timerRunning = false; if (timerInterval) clearInterval(timerInterval); timerInterval = null; };
+            resetBtn.onclick = () => { timerRunning = false; if (timerInterval) clearInterval(timerInterval); timerInterval = null; timerSeconds = phasesTime[currentPhase] || 160; updateTimerDisplay(displayEl); };
+        }
+        function updateTimerDisplay(el) { if (el) { const mins = Math.floor(timerSeconds / 60); const secs = timerSeconds % 60; el.innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`; } }
+        
+        // 備份、還原、合併
+        function exportAllData() {
+            const allUsersData = {};
+            for (let user of usersList) {
+                allUsersData[user] = {
+                    projects: load(getUserKey(user, 'projects'), []),
+                    records: load(getUserKey(user, 'records'), []),
+                    phase: load(getUserKey(user, 'phase'), 1),
+                    phasesTime: load(getUserKey(user, 'phasesTime'), {1:160,2:140,3:120,4:100,5:80}),
+                    lastReminderWeek: load(getUserKey(user, 'lastReminderWeek'), {})
+                };
+            }
+            const exportObj = { version: "1.0", exportDate: new Date().toISOString(), global: { usersList, reminderEnabled, reminderDays }, users: allUsersData };
+            const dataStr = JSON.stringify(exportObj, null, 2);
+            const blob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fitness_backup_${new Date().toISOString().slice(0,19)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert("備份檔已下載");
+        }
+        
+        function importAllData(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!imported.version || !imported.global || !imported.users) throw new Error("無效格式");
+                    usersList = imported.global.usersList;
+                    reminderEnabled = imported.global.reminderEnabled;
+                    reminderDays = imported.global.reminderDays;
+                    saveGlobal();
+                    for (let [user, userData] of Object.entries(imported.users)) {
+                        save(getUserKey(user, 'projects'), userData.projects);
+                        save(getUserKey(user, 'records'), userData.records);
+                        save(getUserKey(user, 'phase'), userData.phase);
+                        save(getUserKey(user, 'phasesTime'), userData.phasesTime);
+                        save(getUserKey(user, 'lastReminderWeek'), userData.lastReminderWeek);
+                    }
+                    if (!usersList.includes(currentUser)) currentUser = usersList[0];
+                    loadUserData(currentUser);
+                    loadGlobal();
+                    if (timerInterval) clearInterval(timerInterval);
+                    timerRunning = false;
+                    render();
+                    alert("還原成功");
+                } catch(err) { alert("還原失敗: " + err.message); }
+            };
+            reader.readAsText(file);
+        }
+        
+        function mergeBackup(file) {
+            exportAllData();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    if (!backup.users) throw new Error("無效備份");
+                    for (let [backupUserName, backupUserData] of Object.entries(backup.users)) {
+                        if (usersList.includes(backupUserName)) {
+                            let currentProjects = load(getUserKey(backupUserName, 'projects'), []);
+                            const backupProjects = backupUserData.projects || [];
+                            const currentNames = new Set(currentProjects.map(p => p.name));
+                            for (let bp of backupProjects) {
+                                if (!currentNames.has(bp.name)) currentProjects.push({ name: bp.name, targetReps: bp.targetReps });
+                            }
+                            save(getUserKey(backupUserName, 'projects'), currentProjects);
+                            let currentRecords = load(getUserKey(backupUserName, 'records'), []);
+                            const backupRecords = backupUserData.records || [];
+                            const existingKeys = new Set(currentRecords.map(r => `${r.date}|${r.projectName}`));
+                            for (let br of backupRecords) {
+                                const key = `${br.date}|${br.projectName}`;
+                                if (!existingKeys.has(key)) {
+                                    currentRecords.push({ ...br, id: Date.now() + Math.random() });
+                                }
+                            }
+                            save(getUserKey(backupUserName, 'records'), currentRecords);
+                        } else {
+                            usersList.push(backupUserName);
+                            saveGlobal();
+                            save(getUserKey(backupUserName, 'projects'), backupUserData.projects);
+                            save(getUserKey(backupUserName, 'records'), backupUserData.records);
+                            save(getUserKey(backupUserName, 'phase'), backupUserData.phase);
+                            save(getUserKey(backupUserName, 'phasesTime'), backupUserData.phasesTime);
+                            save(getUserKey(backupUserName, 'lastReminderWeek'), backupUserData.lastReminderWeek);
+                        }
+                    }
+                    if (!usersList.includes(currentUser)) currentUser = usersList[0];
+                    loadUserData(currentUser);
+                    loadGlobal();
+                    render();
+                    alert("合併完成");
+                } catch(err) { alert("合併失敗: " + err.message); }
+            };
+            reader.readAsText(file);
+        }
+        
+        function saveProjectsChanges() {
+            saveAll();
+            alert("項目變更已儲存");
+            render();
+        }
+        
+        function render() {
+            const app = document.getElementById('app');
+            if (!app) return;
+            const phaseSeconds = phasesTime[currentPhase] || 160;
+            if (!timerRunning) timerSeconds = phaseSeconds;
+            
+            const grouped = {};
+            [...records].sort((a,b)=> new Date(b.date) - new Date(a.date)).forEach(rec => { if (!grouped[rec.date]) grouped[rec.date] = []; grouped[rec.date].push(rec); });
+            const todayStr = new Date().toISOString().slice(0,10);
+            const todayRecords = records.filter(r => r.date === todayStr);
+            
+            app.innerHTML = `
+                <div class="card">
+                    <div class="flex-row">
+                        <div style="flex:1"><label>使用者</label><select id="userSelect">${usersList.map(u => `<option value="${u}" ${u===currentUser ? 'selected' : ''}>${u}</option>`).join('')}</select></div>
+                        <button class="btn-small btn-outline" id="addUserBtn" style="margin-top:22px;">＋新增使用者</button>
+                    </div>
+                    <div class="flex-row" style="margin-top:8px;">
+                        <span class="badge">階段 ${currentPhase}</span>
+                        <button class="btn-small btn-outline" id="upgradePhaseBtn">⬆ 升階段</button>
+                    </div>
+                    <hr>
+                    <div class="timer" id="timerDisplay">00:00</div>
+                    <div class="timer-buttons">
+                        <button class="btn" id="timerStart">▶ 開始</button>
+                        <button class="btn btn-outline" id="timerPause">⏸ 暫停</button>
+                        <button class="btn btn-outline" id="timerReset">🔄 重置</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="flex-row"><h3 style="margin:0;">📝 今日記錄 (${todayStr})</h3><button class="btn" id="newRecordBtn">＋ 新增記錄</button></div>
+                    ${todayRecords.length === 0 ? '<p style="text-align:center; color:#A67B5B; margin-top:16px;">尚無記錄，點上方新增</p>' : todayRecords.map(rec => `
+                        <div class="record-item">
+                            <div><strong>${rec.projectName}</strong> <span class="badge">階段${rec.phase}</span></div>
+                            <div>🏋️ 實際下數: ${rec.reps} / 目標: ${projects.find(p=>p.name===rec.projectName)?.targetReps ?? '未設定'}</div>
+                            <div>⚖️ 重量: ${rec.weight} ${rec.weightUnit}</div>
+                            <div>📈 下次: +${rec.addWeight} / -${rec.minusWeight}</div>
+                            <div>📝 備註: ${rec.note || '無'}</div>
+                            <div class="flex-buttons" style="margin-top:10px;">
+                                <button class="btn-small btn-outline editRecordBtn" data-id="${rec.id}">✏️ 編輯</button>
+                                <button class="btn-small btn-danger deleteRecordBtn" data-id="${rec.id}">🗑️ 刪除</button>
+                            </div>
+                        </div>`).join('')}
+                </div>
+                
+                <div class="card">
+                    <h3>⚙️ 設定</h3>
+                    <details><summary>⏱️ 階段時間設定</summary>
+                        ${[1,2,3,4,5].map(ph => `<label>階段${ph} (秒)</label><input type="number" id="phaseTime_${ph}" value="${phasesTime[ph] || 0}" step="1">`).join('')}
+                        <button id="savePhasesBtn" class="btn" style="width:100%;">💾 儲存階段時間</button>
+                    </details>
+                    
+                    <details><summary>🏋️ 健身項目管理</summary>
+                        <div id="projectsList">
+                            ${projects.map((proj, idx) => `
+                                <div class="project-item">
+                                    <input type="text" value="${proj.name}" data-proj-index="${idx}" class="projNameInput" placeholder="項目名稱">
+                                    <input type="number" placeholder="目標下數" value="${proj.targetReps ?? ''}" data-proj-index="${idx}" class="projTargetInput" style="width:100px;">
+                                    <button class="btn-small btn-danger deleteProjBtn" data-index="${idx}">🗑️ 刪除項目</button>
+                                </div>`).join('')}
+                        </div>
+                        <div class="flex-row" style="margin-top:12px;">
+                            <input type="text" id="newProjName" placeholder="新項目名稱" style="flex:2;">
+                            <input type="number" id="newProjTarget" placeholder="目標下數" style="flex:1;">
+                            <button id="addProjBtn" class="btn-small">＋ 新增</button>
+                        </div>
+                        <button id="saveProjectsBtn" class="btn btn-outline" style="margin-top:12px; width:100%;">💾 儲存所有項目變更</button>
+                        <p><small>⚠️ 刪除項目不會刪除歷史記錄，僅從清單移除。變更後請按「儲存所有項目變更」。</small></p>
+                    </details>
+                    
+                    <details><summary>🔔 提醒設定</summary>
+                        <label class="reminder-checkbox-label">
+                            <input type="checkbox" id="reminderEnable" ${reminderEnabled ? 'checked' : ''}>
+                            <span>啟用健身日前一天提醒</span>
+                        </label>
+                        <div class="weekdays-wrapper">
+                            ${['日','一','二','三','四','五','六'].map((day, idx) => `
+                                <label class="day-checkbox">
+                                    <input type="checkbox" value="${idx}" ${reminderDays.includes(idx) ? 'checked' : ''}>
+                                    <span>週${day}</span>
+                                </label>`).join('')}
+                        </div>
+                        <button id="saveReminderBtn" class="btn-small">💾 儲存提醒設定</button>
+                    </details>
+                    <hr>
+                    <div class="action-buttons">
+                        <button id="backupBtn" class="btn">💾 備份資料</button>
+                        <label for="restoreFileInput" class="btn btn-outline" style="cursor:pointer;">📂 還原備份</label>
+                        <label for="mergeFileInput" class="btn btn-outline" style="cursor:pointer;">🔄 合併備份</label>
+                        <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
+                        <input type="file" id="mergeFileInput" accept=".json" style="display:none;">
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>📜 歷史記錄</h3>
+                    ${Object.keys(grouped).length === 0 ? '<p>尚無歷史記錄</p>' : Object.entries(grouped).map(([date, recs]) => `
+                        <div class="history-date">📅 ${date}</div>
+                        ${recs.map(rec => `
+                            <div class="record-item">
+                                <strong>${rec.projectName}</strong> (階段${rec.phase})<br>
+                                實際下數: ${rec.reps} | 重量: ${rec.weight} ${rec.weightUnit}<br>
+                                下次: +${rec.addWeight}/-${rec.minusWeight}<br>
+                                備註: ${rec.note || '無'}
+                                <div class="flex-buttons" style="margin-top:8px;">
+                                    <button class="btn-small btn-outline editHistoryBtn" data-id="${rec.id}">✏️ 編輯</button>
+                                    <button class="btn-small btn-danger deleteRecordBtn" data-id="${rec.id}">🗑️ 刪除</button>
+                                </div>
+                            </div>`).join('')}
+                    `).join('')}
+                </div>
+            `;
+            
+            // 綁定事件 (與之前相同)
+            document.getElementById('userSelect')?.addEventListener('change', (e) => { currentUser = e.target.value; loadUserData(currentUser); loadGlobal(); if(timerInterval) clearInterval(timerInterval); timerRunning = false; render(); });
+            document.getElementById('addUserBtn')?.addEventListener('click', () => { const name = prompt("請輸入新使用者名稱"); if(name && addUser(name)) { currentUser = name; loadUserData(currentUser); render(); } else alert("無效或已存在"); });
+            document.getElementById('upgradePhaseBtn')?.addEventListener('click', upgradePhase);
+            document.getElementById('newRecordBtn')?.addEventListener('click', () => showRecordModal());
+            document.getElementById('savePhasesBtn')?.addEventListener('click', () => { for(let i=1;i<=5;i++) { const val = parseInt(document.getElementById(`phaseTime_${i}`).value); if(!isNaN(val)) phasesTime[i] = val; } saveAll(); alert("階段時間已儲存"); render(); });
+            
+            document.getElementById('addProjBtn')?.addEventListener('click', () => {
+                const name = document.getElementById('newProjName').value.trim();
+                const target = document.getElementById('newProjTarget').value;
+                if(!name) { alert("請輸入項目名稱"); return; }
+                projects.push({ name, targetReps: target ? parseInt(target) : null });
+                saveAll();
+                render();
+            });
+            document.getElementById('saveProjectsBtn')?.addEventListener('click', () => {
+                const nameInputs = document.querySelectorAll('.projNameInput');
+                const targetInputs = document.querySelectorAll('.projTargetInput');
+                for (let i = 0; i < nameInputs.length; i++) {
+                    if (projects[i]) {
+                        projects[i].name = nameInputs[i].value;
+                        const val = parseInt(targetInputs[i].value);
+                        projects[i].targetReps = isNaN(val) ? null : val;
+                    }
+                }
+                saveAll();
+                alert("所有項目變更已儲存");
+                render();
+            });
+            document.querySelectorAll('.deleteProjBtn').forEach(btn => btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.dataset.index);
+                if(confirm(`確定要刪除項目「${projects[idx].name}」嗎？歷史記錄仍會保留。`)) {
+                    projects.splice(idx,1);
+                    saveAll();
+                    render();
+                }
+            }));
+            
+            document.getElementById('saveReminderBtn')?.addEventListener('click', () => {
+                reminderEnabled = document.getElementById('reminderEnable').checked;
+                const checks = document.querySelectorAll('.day-checkbox input');
+                reminderDays = Array.from(checks).filter(cb => cb.checked).map(cb => parseInt(cb.value));
+                saveGlobal();
+                lastReminderWeek = {};
+                saveAll();
+                alert("提醒設定已儲存");
+            });
+            document.getElementById('backupBtn')?.addEventListener('click', exportAllData);
+            const restoreInput = document.getElementById('restoreFileInput');
+            if (restoreInput) restoreInput.addEventListener('change', (e) => { if(e.target.files.length) { if(confirm("還原會覆蓋所有現有資料，建議先備份。繼續？")) importAllData(e.target.files[0]); restoreInput.value = ''; } });
+            const mergeInput = document.getElementById('mergeFileInput');
+            if (mergeInput) mergeInput.addEventListener('change', (e) => { if(e.target.files.length) { if(confirm("合併將新增備份中沒有的記錄（手機原有記錄優先），並自動備份目前資料。繼續？")) mergeBackup(e.target.files[0]); mergeInput.value = ''; } });
+            
+            const timerDisplaySpan = document.getElementById('timerDisplay');
+            const startBtn = document.getElementById('timerStart');
+            const pauseBtn = document.getElementById('timerPause');
+            const resetBtn = document.getElementById('timerReset');
+            if(timerDisplaySpan) initTimerDisplay(timerDisplaySpan, startBtn, pauseBtn, resetBtn);
+            
+            document.querySelectorAll('.deleteRecordBtn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); if(confirm("刪除此記錄？")) deleteRecord(id); }));
+            document.querySelectorAll('.editRecordBtn, .editHistoryBtn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); const record = records.find(r => r.id === id); if(record) showRecordModal(record); }));
+            checkReminder();
+        }
+        
+        function showRecordModal(record = null) {
+            const isEdit = !!record;
+            const date = record ? record.date : new Date().toISOString().slice(0,10);
+            const projectName = record ? record.projectName : (projects[0]?.name || '');
+            const reps = record ? record.reps : '';
+            const weight = record ? record.weight : '';
+            const weightUnit = record ? record.weightUnit : 'kg';
+            const addWeight = record ? record.addWeight : '';
+            const minusWeight = record ? record.minusWeight : '';
+            const note = record ? record.note : '';
+            
+            const modalHtml = `
+                <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;" id="modalOverlay">
+                    <div style="background:white; border-radius:28px; padding:24px; width:90%; max-width:400px; max-height:85vh; overflow:auto;">
+                        <h3 style="margin-top:0;">${isEdit ? '✏️ 編輯記錄' : '➕ 新增記錄'}</h3>
+                        <label>📅 日期</label><input type="date" id="modalDate" value="${date}">
+                        <label>🏋️ 項目</label><select id="modalProject">${projects.map(p => `<option value="${p.name}" ${p.name===projectName ? 'selected' : ''}>${p.name}</option>`).join('')}</select>
+                        <label>✅ 實際做到下數</label><input type="number" id="modalReps" value="${reps}" placeholder="例如 30">
+                        <label>⚖️ 重量</label><input type="number" id="modalWeight" value="${weight}" placeholder="0">
+                        <label>📏 單位</label><select id="modalUnit"><option ${weightUnit==='kg'?'selected':''}>kg</option><option ${weightUnit==='lbs'?'selected':''}>lbs</option></select>
+                        <label>📈 下次可加重量</label><input type="number" id="modalAddWeight" value="${addWeight}" placeholder="+">
+                        <label>📉 下次可減重量</label><input type="number" id="modalMinusWeight" value="${minusWeight}" placeholder="-">
+                        <label>📝 動作備註</label><textarea id="modalNote" rows="2" placeholder="例如：注意呼吸、離心放慢...">${note}</textarea>
+                        <button class="btn btn-outline" id="copyLastBtn" style="margin:8px 0;">📋 複製上一次記錄 (同項目)</button>
+                        <div style="display:flex; gap:12px; margin-top:16px;">
+                            <button class="btn" id="modalSaveBtn" style="flex:1;">💾 儲存</button>
+                            <button class="btn-outline btn" id="modalCancelBtn" style="flex:1;">取消</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const overlay = document.getElementById('modalOverlay');
+            document.getElementById('copyLastBtn').onclick = () => {
+                const selectedProj = document.getElementById('modalProject').value;
+                const last = getLastRecordByProject(selectedProj);
+                if(last) {
+                    document.getElementById('modalReps').value = last.reps;
+                    document.getElementById('modalWeight').value = last.weight;
+                    document.getElementById('modalUnit').value = last.weightUnit;
+                    document.getElementById('modalAddWeight').value = last.addWeight;
+                    document.getElementById('modalMinusWeight').value = last.minusWeight;
+                    document.getElementById('modalNote').value = last.note;
+                } else alert('無此項目的歷史記錄');
+            };
+            document.getElementById('modalSaveBtn').onclick = () => {
+                const newDate = document.getElementById('modalDate').value;
+                const newProject = document.getElementById('modalProject').value;
+                const newReps = document.getElementById('modalReps').value;
+                const newWeight = document.getElementById('modalWeight').value;
+                const newUnit = document.getElementById('modalUnit').value;
+                const newAdd = document.getElementById('modalAddWeight').value;
+                const newMinus = document.getElementById('modalMinusWeight').value;
+                const newNote = document.getElementById('modalNote').value;
+                if (!newReps) { alert("請填寫實際做到下數"); return; }
+                if(isEdit) updateRecord(record.id, { date: newDate, projectName: newProject, reps: parseInt(newReps)||0, weight: parseFloat(newWeight)||0, weightUnit: newUnit, addWeight: parseFloat(newAdd)||0, minusWeight: parseFloat(newMinus)||0, note: newNote });
+                else addRecord(newDate, newProject, newReps, newWeight, newUnit, newAdd, newMinus, newNote);
+                overlay.remove();
+            };
+            document.getElementById('modalCancelBtn').onclick = () => overlay.remove();
+            overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+        }
+        
+        loadGlobal();
+        loadUserData(currentUser);
+        if (window.Notification && Notification.permission === "default") Notification.requestPermission();
+        render();
+    })();
+</script>
+</body>
+</html>
