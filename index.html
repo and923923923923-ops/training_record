@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>健身記錄助手</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="健身助手">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23D2B48C'/%3E%3Ctext x='50' y='67' font-size='60' text-anchor='middle' fill='%234A2C2A' font-family='system-ui'%3E🏋️%3C/text%3E%3C/svg%3E">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #FDF8F0; margin: 0; padding: 20px 16px 100px; color: #4A2C2A; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: #FFF9F0; border-radius: 28px; padding: 24px 20px; margin-bottom: 28px; box-shadow: 0 8px 20px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.02); }
+        .flex-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; margin-bottom: 8px; }
+        .btn { background: #8B5A2B; border: none; color: white; padding: 10px 20px; border-radius: 40px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08); text-align: center; display: inline-block; text-decoration: none; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .btn-outline { background: transparent; border: 2px solid #A67B5B; color: #5D3A1A; box-shadow: none; }
+        .btn-outline:active { background: #F0E5D8; transform: translateY(1px); }
+        .btn-danger { background: #B55B4A; box-shadow: 0 4px 6px rgba(0,0,0,0.12); }
+        .btn-small { padding: 6px 14px; font-size: 13px; }
+        select, input, textarea { width: 100%; padding: 12px 14px; border-radius: 20px; border: 1px solid #E3D5C0; background: #FFFFFF; font-size: 16px; margin-top: 6px; margin-bottom: 18px; font-family: inherit; }
+        select:focus, input:focus, textarea:focus { outline: none; border-color: #A67B5B; box-shadow: 0 0 0 2px rgba(166,123,91,0.2); }
+        label { font-weight: 600; font-size: 14px; color: #5D3A1A; display: block; margin-bottom: 6px; }
+        .timer { background: #EBDCC8; border-radius: 60px; padding: 20px 16px; text-align: center; font-size: 48px; font-family: monospace; font-weight: bold; letter-spacing: 6px; color: #4A2C2A; margin: 16px 0 20px; box-shadow: inset 0 1px 4px rgba(0,0,0,0.05), 0 2px 6px rgba(0,0,0,0.05); }
+        .timer-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 8px; margin-bottom: 8px; }
+        .record-item { background: #FFF8F0; border-radius: 24px; padding: 16px; margin-bottom: 16px; border-left: 6px solid #A67B5B; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+        .badge { background: #EBDCC8; padding: 6px 12px; border-radius: 40px; font-size: 13px; font-weight: 600; color: #5D3A1A; }
+        .history-date { font-weight: bold; margin-top: 24px; margin-bottom: 12px; font-size: 18px; color: #8B5A2B; border-left: 4px solid #A67B5B; padding-left: 12px; }
+        .reminder-checkbox-label { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; cursor: pointer; width: fit-content; }
+        .reminder-checkbox-label input { width: auto; margin: 0; transform: scale(1.1); accent-color: #8B5A2B; }
+        .reminder-checkbox-label span { font-weight: 600; font-size: 15px; color: #5D3A1A; white-space: nowrap; }
+        .weekdays-wrapper { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0 24px; align-items: center; }
+        .day-checkbox { display: inline-flex; align-items: center; gap: 6px; background: #F5EDE2; padding: 6px 14px; border-radius: 40px; font-size: 14px; font-weight: 500; color: #5D3A1A; cursor: pointer; white-space: nowrap; }
+        .day-checkbox input { width: auto; margin: 0; transform: scale(1.1); accent-color: #8B5A2B; }
+        .day-checkbox span { margin-left: 0; }
+        hr { margin: 24px 0; border: none; height: 1px; background: #E3D5C0; }
+        .action-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+        .action-buttons .btn, .action-buttons .btn-outline { flex: 1; text-align: center; justify-content: center; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .project-item { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .project-item input { flex: 1; margin-bottom: 0; }
+        .flex-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+        /* 報表彈窗樣式 */
+        .report-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+            z-index: 2000; overflow-y: auto; padding: 20px;
+        }
+        .report-container {
+            background: #FFF9F0; border-radius: 32px; max-width: 550px; width: 100%;
+            max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .report-title { font-size: 22px; font-weight: bold; margin-bottom: 16px; color: #4A2C2A; border-left: 5px solid #A67B5B; padding-left: 12px; }
+        .stat-grid { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+        .stat-card { background: #F5EDE2; border-radius: 20px; padding: 12px 16px; flex: 1; min-width: 120px; text-align: center; }
+        .stat-number { font-size: 28px; font-weight: bold; color: #8B5A2B; }
+        .project-list { max-height: 200px; overflow-y: auto; margin: 12px 0; border-top: 1px solid #E3D5C0; border-bottom: 1px solid #E3D5C0; }
+        .project-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #EFE5D8; }
+        .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; align-items: center; }
+        .filter-bar select, .filter-bar input { width: auto; margin: 0; flex: 1; }
+        .small-btn { padding: 6px 12px; font-size: 13px; }
+        canvas { max-height: 200px; margin: 12px 0; background: white; border-radius: 16px; padding: 8px; }
+        .weight-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 8px 0 12px;
+        }
+        .weight-grid input {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 16px;
+            border: 1px solid #E3D5C0;
+            font-size: 16px;
+            text-align: center;
+        }
+        .weight-grid label {
+            font-size: 13px;
+            text-align: center;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .weight-total {
+            font-size: 14px;
+            font-weight: 600;
+            color: #5D3A1A;
+            margin-top: 4px;
+        }
+        .dumbbell-checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0 12px;
+            cursor: pointer;
+        }
+        .dumbbell-checkbox-wrapper input {
+            width: auto;
+            margin: 0;
+            transform: scale(1.1);
+            accent-color: #8B5A2B;
+            pointer-events: auto;
+            flex-shrink: 0;
+        }
+        .dumbbell-checkbox-wrapper span {
+            font-weight: 500;
+            font-size: 15px;
+            color: #5D3A1A;
+            cursor: pointer;
+        }
+        .deviation-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .deviation-row select {
+            width: auto;
+            flex: 1;
+            margin: 0;
+        }
+        .deviation-row input {
+            width: 80px;
+            margin: 0;
+            display: none;
+        }
+        .deviation-row input.visible {
+            display: block;
+        }
+        @media (max-width: 500px) {
+            body { padding: 16px 12px 80px; }
+            .timer { font-size: 40px; letter-spacing: 3px; padding: 16px; }
+            .flex-row { flex-direction: column; align-items: stretch; }
+            .project-item { flex-direction: column; align-items: stretch; }
+            .action-buttons { flex-direction: column; }
+            .action-buttons .btn, .action-buttons .btn-outline { white-space: normal; justify-content: center; }
+            .day-checkbox { white-space: normal; }
+            .reminder-checkbox-label span { white-space: normal; }
+            .card { padding: 20px 16px; }
+            .weight-grid { grid-template-columns: 1fr 1fr; }
+            .deviation-row { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+    (function() {
+        // ==================== 版本更新檢查 ====================
+        const STORAGE_VERSION_KEY = 'app_version';
+        function checkForUpdates() {
+            fetch('version.json?v=' + Date.now())
+                .then(res => {
+                    if (!res.ok) throw new Error('無法獲取版本');
+                    return res.json();
+                })
+                .then(data => {
+                    const remoteVersion = data.version;
+                    const currentVersion = localStorage.getItem(STORAGE_VERSION_KEY);
+                    if (remoteVersion && currentVersion !== remoteVersion) {
+                        const msg = data.updateMessage ? `更新內容：${data.updateMessage}` : '請重新整理取得最新功能。';
+                        if (confirm(`發現新版本 (${remoteVersion})\n${msg}\n\n是否立即重新整理？`)) {
+                            localStorage.setItem(STORAGE_VERSION_KEY, remoteVersion);
+                            window.location.reload(true);
+                        } else {
+                            localStorage.setItem(STORAGE_VERSION_KEY + '_pending', remoteVersion);
+                        }
+                    } else if (remoteVersion && !currentVersion) {
+                        localStorage.setItem(STORAGE_VERSION_KEY, remoteVersion);
+                    }
+                })
+                .catch(err => console.log('版本檢查失敗', err));
+        }
+        setTimeout(checkForUpdates, 500);
+
+        // ==================== 儲存邏輯 ====================
+        const STORAGE_PREFIX = 'fitness_';
+        function getUserKey(user, suffix) { return `${STORAGE_PREFIX}${user}_${suffix}`; }
+        const DEFAULT_PROJECTS = [
+            { name: "深蹲", category: "下身", targetReps: null },
+            { name: "勾腿", category: "下身", targetReps: null },
+            { name: "踢腿", category: "下身", targetReps: null },
+            { name: "胸肌", category: "上身", targetReps: null },
+            { name: "膊頭", category: "上身", targetReps: null },
+            { name: "背肌上", category: "上身", targetReps: null },
+            { name: "背肌下", category: "上身", targetReps: null },
+            { name: "三頭肌", category: "上身", targetReps: null },
+            { name: "二頭肌", category: "上身", targetReps: null },
+            { name: "腹肌", category: "上身", targetReps: null }
+        ];
+        let currentUser = "我";
+        let usersList = ["我"];
+        let phasesTime = {1:160, 2:140, 3:120, 4:100, 5:80};
+        let currentPhase = 1;
+        let projects = [];
+        let records = [];
+        let reminderEnabled = false;
+        let reminderDays = [];
+        let lastReminderWeek = {};
+
+        function save(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch(e) { return false; } }
+        function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
+        function saveAll() {
+            save(getUserKey(currentUser, 'projects'), projects);
+            save(getUserKey(currentUser, 'records'), records);
+            save(getUserKey(currentUser, 'phase'), currentPhase);
+            save('global_usersList', usersList);
+            save('global_reminderEnabled', reminderEnabled);
+            save('global_reminderDays', reminderDays);
+            save(getUserKey(currentUser, 'phasesTime'), phasesTime);
+            save(getUserKey(currentUser, 'lastReminderWeek'), lastReminderWeek);
+        }
+        function loadUserData(user) {
+            projects = load(getUserKey(user, 'projects'), DEFAULT_PROJECTS.map(p => ({ name: p.name, category: p.category, targetReps: null })));
+            records = load(getUserKey(user, 'records'), []);
+            currentPhase = load(getUserKey(user, 'phase'), 1);
+            phasesTime = load(getUserKey(user, 'phasesTime'), {1:160,2:140,3:120,4:100,5:80});
+            lastReminderWeek = load(getUserKey(user, 'lastReminderWeek'), {});
+        }
+        function loadGlobal() {
+            usersList = load('global_usersList', ["我"]);
+            if (!usersList.includes(currentUser)) currentUser = usersList[0];
+            reminderEnabled = load('global_reminderEnabled', false);
+            reminderDays = load('global_reminderDays', [5]);
+        }
+        function saveGlobal() { save('global_usersList', usersList); save('global_reminderEnabled', reminderEnabled); save('global_reminderDays', reminderDays); }
+        function addUser(name) {
+            if (!name || usersList.includes(name)) return false;
+            usersList.push(name); saveGlobal();
+            save(getUserKey(name, 'projects'), DEFAULT_PROJECTS.map(p => ({ name: p.name, category: p.category, targetReps: null })));
+            save(getUserKey(name, 'records'), []);
+            save(getUserKey(name, 'phase'), 1);
+            save(getUserKey(name, 'phasesTime'), {1:160,2:140,3:120,4:100,5:80});
+            save(getUserKey(name, 'lastReminderWeek'), {});
+            return true;
+        }
+        function getLastRecordByProject(projectName) { return [...records].reverse().find(r => r.projectName === projectName); }
+
+        function addRecord(date, projectName, reps, weightKg, weightLbs, addKg, addLbs, addOption, note,
+                           isDumbbell, dTopLeft, dBotLeft, dTopRight, dBotRight,
+                           deviationType, deviationValue) {
+            records.push({
+                id: Date.now() + Math.random(),
+                date, projectName,
+                reps: parseInt(reps)||0,
+                weightKg: parseFloat(weightKg)||0,
+                weightLbs: parseFloat(weightLbs)||0,
+                addKg: parseFloat(addKg)||0,
+                addLbs: parseFloat(addLbs)||0,
+                addOption: addOption || 'add',
+                note: note || '',
+                phase: currentPhase,
+                isDumbbell: isDumbbell || false,
+                dTopLeft: parseFloat(dTopLeft)||0,
+                dBotLeft: parseFloat(dBotLeft)||0,
+                dTopRight: parseFloat(dTopRight)||0,
+                dBotRight: parseFloat(dBotRight)||0,
+                deviationType: deviationType || 'equal',
+                deviationValue: parseInt(deviationValue)||0
+            });
+            saveAll(); render();
+        }
+
+        function deleteRecord(id) { records = records.filter(r => r.id != id); saveAll(); render(); }
+        function updateRecord(id, updated) { const idx = records.findIndex(r => r.id == id); if(idx!==-1) { records[idx] = {...records[idx], ...updated}; saveAll(); render(); } }
+
+        function upgradePhase() {
+            if (currentPhase >= 5) { alert("已是最高的階段5"); return; }
+            if (confirm(`從階段${currentPhase}升至${currentPhase+1}？項目與目標會複製，新階段時間請至設定調整。`)) { currentPhase++; saveAll(); render(); }
+        }
+        function getWeekNumber(d) { const temp = new Date(d); temp.setHours(0,0,0,0); temp.setDate(temp.getDate()+3-(temp.getDay()+6)%7); const week1 = new Date(temp.getFullYear(),0,4); return 1+Math.round(((temp-week1)/86400000-3+(week1.getDay()+6)%7)/7); }
+        function checkReminder() {
+            if (!reminderEnabled || reminderDays.length===0) return;
+            const today = new Date(), todayWeekday = today.getDay(), year = today.getFullYear(), weekNumber = getWeekNumber(today);
+            for (let day of reminderDays) {
+                const prevDay = (day===0)?6:day-1;
+                if (prevDay===todayWeekday) {
+                    const weekKey = `${year}-W${weekNumber}-${day}`;
+                    if (!lastReminderWeek[weekKey]) {
+                        const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+                        const weekdayName = ['日','一','二','三','四','五','六'][day];
+                        const message = `提醒：明天 (${tomorrow.getMonth()+1}/${tomorrow.getDate()}) 是健身日 (週${weekdayName})，記得訓練！`;
+                        if (window.Notification && Notification.permission==="granted") new Notification("健身提醒", { body: message });
+                        else if (window.Notification && Notification.permission!=="denied") Notification.requestPermission();
+                        alert(message);
+                        lastReminderWeek[weekKey]=true; saveAll();
+                    }
+                }
+            }
+        }
+        let timerInterval = null, timerSeconds = 0, timerRunning = false;
+        function initTimerDisplay(displayEl, startBtn, pauseBtn, resetBtn) {
+            const phaseSeconds = phasesTime[currentPhase] || 160;
+            if (!timerRunning) timerSeconds = phaseSeconds;
+            function update() { if(displayEl) { const mins = Math.floor(timerSeconds/60); const secs = timerSeconds%60; displayEl.innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`; } }
+            update();
+            startBtn.onclick = () => {
+                if(timerInterval) clearInterval(timerInterval);
+                timerRunning = true;
+                timerInterval = setInterval(() => {
+                    if(timerRunning && timerSeconds>0) { timerSeconds--; update(); if(timerSeconds===0) { clearInterval(timerInterval); timerRunning=false; alert("時間到！"); timerSeconds = phasesTime[currentPhase]||160; update(); } }
+                    else if(timerSeconds===0) { clearInterval(timerInterval); timerRunning=false; }
+                }, 1000);
+            };
+            pauseBtn.onclick = () => { timerRunning=false; if(timerInterval) clearInterval(timerInterval); timerInterval=null; };
+            resetBtn.onclick = () => { timerRunning=false; if(timerInterval) clearInterval(timerInterval); timerInterval=null; timerSeconds = phasesTime[currentPhase]||160; update(); };
+        }
+
+        // 備份 / 還原 / 合併
+        function exportAllData() {
+            const allUsersData = {};
+            for(let user of usersList) {
+                allUsersData[user] = {
+                    projects: load(getUserKey(user, 'projects'), []),
+                    records: load(getUserKey(user, 'records'), []),
+                    phase: load(getUserKey(user, 'phase'), 1),
+                    phasesTime: load(getUserKey(user, 'phasesTime'), {1:160,2:140,3:120,4:100,5:80}),
+                    lastReminderWeek: load(getUserKey(user, 'lastReminderWeek'), {})
+                };
+            }
+            const exportObj = { version:"1.0", exportDate:new Date().toISOString(), global:{ usersList, reminderEnabled, reminderDays }, users: allUsersData };
+            const blob = new Blob([JSON.stringify(exportObj,null,2)], {type:"application/json"});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fitness_backup_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(a.href);
+            alert("備份檔已下載");
+        }
+        function importAllData(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!imported.version || !imported.global || !imported.users) throw new Error("無效格式");
+                    usersList = imported.global.usersList; reminderEnabled = imported.global.reminderEnabled; reminderDays = imported.global.reminderDays; saveGlobal();
+                    for (let [user, userData] of Object.entries(imported.users)) {
+                        save(getUserKey(user, 'projects'), userData.projects);
+                        save(getUserKey(user, 'records'), userData.records);
+                        save(getUserKey(user, 'phase'), userData.phase);
+                        save(getUserKey(user, 'phasesTime'), userData.phasesTime);
+                        save(getUserKey(user, 'lastReminderWeek'), userData.lastReminderWeek);
+                    }
+                    if (!usersList.includes(currentUser)) currentUser = usersList[0];
+                    loadUserData(currentUser); loadGlobal(); if(timerInterval) clearInterval(timerInterval); timerRunning=false; render();
+                    alert("還原成功");
+                } catch(err) { alert("還原失敗: "+err.message); }
+            };
+            reader.readAsText(file);
+        }
+        function mergeBackup(file) {
+            exportAllData();
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    if (!backup.users) throw new Error("無效備份");
+                    for (let [backupUserName, backupUserData] of Object.entries(backup.users)) {
+                        if (usersList.includes(backupUserName)) {
+                            let currentProjects = load(getUserKey(backupUserName, 'projects'), []);
+                            const backupProjects = backupUserData.projects || [];
+                            const currentNames = new Set(currentProjects.map(p=>p.name));
+                            for (let bp of backupProjects) if (!currentNames.has(bp.name)) currentProjects.push({ name: bp.name, category: bp.category || '上身', targetReps: bp.targetReps });
+                            save(getUserKey(backupUserName, 'projects'), currentProjects);
+                            let currentRecords = load(getUserKey(backupUserName, 'records'), []);
+                            const backupRecords = backupUserData.records || [];
+                            const existingKeys = new Set(currentRecords.map(r=>`${r.date}|${r.projectName}`));
+                            for (let br of backupRecords) {
+                                const key = `${br.date}|${br.projectName}`;
+                                if (!existingKeys.has(key)) {
+                                    const newRec = { ...br, id: Date.now()+Math.random() };
+                                    if (!newRec.hasOwnProperty('isDumbbell')) newRec.isDumbbell = false;
+                                    if (!newRec.hasOwnProperty('dTopLeft')) newRec.dTopLeft = 0;
+                                    if (!newRec.hasOwnProperty('dBotLeft')) newRec.dBotLeft = 0;
+                                    if (!newRec.hasOwnProperty('dTopRight')) newRec.dTopRight = 0;
+                                    if (!newRec.hasOwnProperty('dBotRight')) newRec.dBotRight = 0;
+                                    if (!newRec.hasOwnProperty('addOption')) newRec.addOption = 'add';
+                                    if (!newRec.hasOwnProperty('deviationType')) newRec.deviationType = 'equal';
+                                    if (!newRec.hasOwnProperty('deviationValue')) newRec.deviationValue = 0;
+                                    currentRecords.push(newRec);
+                                }
+                            }
+                            save(getUserKey(backupUserName, 'records'), currentRecords);
+                        } else {
+                            usersList.push(backupUserName); saveGlobal();
+                            save(getUserKey(backupUserName, 'projects'), backupUserData.projects);
+                            save(getUserKey(backupUserName, 'records'), backupUserData.records);
+                            save(getUserKey(backupUserName, 'phase'), backupUserData.phase);
+                            save(getUserKey(backupUserName, 'phasesTime'), backupUserData.phasesTime);
+                            save(getUserKey(backupUserName, 'lastReminderWeek'), backupUserData.lastReminderWeek);
+                        }
+                    }
+                    if (!usersList.includes(currentUser)) currentUser = usersList[0];
+                    loadUserData(currentUser); loadGlobal(); render();
+                    alert("合併完成");
+                } catch(err) { alert("合併失敗: "+err.message); }
+            };
+            reader.readAsText(file);
+        }
+        function saveProjectsChanges() { saveAll(); alert("項目變更已儲存"); render(); }
+
+        // ==================== 報表功能 ====================
+        function showReport() {
+            function getDateRange(type, startDate, endDate) {
+                const now = new Date();
+                let start, end = new Date();
+                end.setHours(23,59,59,999);
+                if (type === 'all') {
+                    start = new Date(0);
+                } else if (type === 'week') {
+                    const day = now.getDay();
+                    start = new Date(now); start.setDate(now.getDate() - day + (day===0? -6:1));
+                    start.setHours(0,0,0,0);
+                } else if (type === 'month') {
+                    start = new Date(now.getFullYear(), now.getMonth(), 1);
+                } else if (type === 'custom') {
+                    start = new Date(startDate); start.setHours(0,0,0,0);
+                    end = new Date(endDate); end.setHours(23,59,59,999);
+                } else {
+                    start = new Date(0);
+                }
+                if (type === 'all' || type === 'week' || type === 'month') end = new Date(); end.setHours(23,59,59,999);
+                return { start, end };
+            }
+            function filterRecordsByDate(recordsList, range) {
+                return recordsList.filter(r => {
+                    const d = new Date(r.date);
+                    return d >= range.start && d <= range.end;
+                });
+            }
+            function computeStats(filteredRecords, allProjects, categoryFilter) {
+                let totalReps = 0;
+                const freq = {};
+                const maxWeight = {};
+                const maxReps = {};
+                const progressData = {};
+                const catMap = {};
+                allProjects.forEach(p => catMap[p.name] = p.category || '上身');
+                let targetRecords = filteredRecords;
+                if (categoryFilter !== 'all') {
+                    targetRecords = filteredRecords.filter(r => catMap[r.projectName] === categoryFilter);
+                }
+                for (let rec of targetRecords) {
+                    totalReps += rec.reps;
+                    freq[rec.projectName] = (freq[rec.projectName]||0) + 1;
+                    let totalKg = 0;
+                    if (rec.isDumbbell) {
+                        const leftTotal = rec.dTopLeft + rec.dBotLeft;
+                        const rightTotal = rec.dTopRight + rec.dBotRight;
+                        totalKg = (leftTotal + rightTotal) * 0.453592;
+                    } else {
+                        totalKg = (rec.weightKg || 0) + (rec.weightLbs || 0) * 0.453592;
+                    }
+                    if (!maxWeight[rec.projectName] || totalKg > maxWeight[rec.projectName].totalKg) {
+                        maxWeight[rec.projectName] = { totalKg, date: rec.date, rec: rec };
+                    }
+                    if (!maxReps[rec.projectName] || rec.reps > maxReps[rec.projectName].reps) {
+                        maxReps[rec.projectName] = { reps: rec.reps, date: rec.date };
+                    }
+                    if (!progressData[rec.projectName]) progressData[rec.projectName] = { reps: [], weight: [] };
+                    progressData[rec.projectName].reps.push({ date: rec.date, value: rec.reps });
+                    progressData[rec.projectName].weight.push({ date: rec.date, value: totalKg, raw: rec });
+                }
+                for (let p in progressData) {
+                    progressData[p].reps.sort((a,b)=> new Date(a.date) - new Date(b.date));
+                    progressData[p].weight.sort((a,b)=> new Date(a.date) - new Date(b.date));
+                }
+                return { totalReps, freq, maxWeight, maxReps, progressData };
+            }
+            function getPhaseHistory() {
+                const phaseChanges = [];
+                let lastPhase = null;
+                records.sort((a,b)=> new Date(a.date) - new Date(b.date)).forEach(r => {
+                    if (r.phase !== lastPhase) {
+                        phaseChanges.push({ phase: r.phase, date: r.date });
+                        lastPhase = r.phase;
+                    }
+                });
+                return phaseChanges;
+            }
+
+            const modalDiv = document.createElement('div');
+            modalDiv.className = 'report-modal';
+            let filterType = 'week';
+            let categoryFilter = 'all';
+            let customStart = '', customEnd = '';
+            let currentChart = null;
+
+            function refreshReport() {
+                const range = getDateRange(filterType, customStart, customEnd);
+                const filtered = filterRecordsByDate(records, range);
+                const stats = computeStats(filtered, projects, categoryFilter);
+                const phaseHistory = getPhaseHistory();
+                document.getElementById('reportTotalReps').innerText = stats.totalReps;
+                document.getElementById('reportFreqList').innerHTML = Object.entries(stats.freq).map(([name, cnt]) => `<div class="project-row"><span>${name}</span><span>${cnt} 次</span></div>`).join('') || '<div>無資料</div>';
+                document.getElementById('reportMaxList').innerHTML = Object.entries(stats.maxWeight).map(([name, data]) => {
+                    const rec = data.rec;
+                    let weightDisplay = '';
+                    if (rec.isDumbbell) {
+                        const leftTotal = rec.dTopLeft + rec.dBotLeft;
+                        const rightTotal = rec.dTopRight + rec.dBotRight;
+                        weightDisplay = `左${leftTotal} lbs / 右${rightTotal} lbs (總重 ${data.totalKg.toFixed(2)} kg)`;
+                    } else {
+                        let kg = rec.weightKg || 0;
+                        let lbs = rec.weightLbs || 0;
+                        weightDisplay = `${kg} kg + ${lbs} lbs (總重 ${data.totalKg.toFixed(2)} kg)`;
+                    }
+                    return `<div class="project-row"><span>${name}</span><span>重量: ${weightDisplay}<br>下數: ${stats.maxReps[name]?.reps ?? 0} (${stats.maxReps[name]?.date ?? ''})</span></div>`;
+                }).join('') || '<div>無資料</div>';
+                document.getElementById('phaseHistoryList').innerHTML = phaseHistory.map(p => `<div>🎯 階段 ${p.phase} 首次出現於 ${p.date}</div>`).join('') || '<div>尚無階段變化</div>';
+
+                const projectSelect = document.getElementById('chartProjectSelect');
+                const chartTypeSelect = document.getElementById('chartTypeSelect');
+                if (projectSelect) {
+                    const currentProj = projectSelect.value;
+                    const availableProjects = Object.keys(stats.progressData);
+                    projectSelect.innerHTML = '<option value="">-- 選擇項目 --</option>' + availableProjects.map(p => `<option value="${p}" ${p===currentProj?'selected':''}>${p}</option>`).join('');
+                    if (currentProj && stats.progressData[currentProj]) {
+                        const dataPoints = chartTypeSelect.value === 'reps' ? stats.progressData[currentProj].reps : stats.progressData[currentProj].weight;
+                        const labels = dataPoints.map(d => d.date.slice(5));
+                        const values = dataPoints.map(d => d.value);
+                        const projectObj = projects.find(p => p.name === currentProj);
+                        let isDumbbell = false;
+                        if (projectObj && projectObj.category === '上身') {
+                            const hasDumbbell = records.some(r => r.projectName === currentProj && r.isDumbbell);
+                            if (hasDumbbell) isDumbbell = true;
+                        }
+                        if (currentChart) currentChart.destroy();
+                        const ctx = document.getElementById('progressChart').getContext('2d');
+                        if (isDumbbell && chartTypeSelect.value === 'weight') {
+                            const leftData = [];
+                            const rightData = [];
+                            const sortedRecords = records.filter(r => r.projectName === currentProj && r.isDumbbell).sort((a,b)=> new Date(a.date) - new Date(b.date));
+                            const labels2 = sortedRecords.map(r => r.date.slice(5));
+                            sortedRecords.forEach(r => {
+                                const left = r.dTopLeft + r.dBotLeft;
+                                const right = r.dTopRight + r.dBotRight;
+                                leftData.push(left);
+                                rightData.push(right);
+                            });
+                            currentChart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: labels2,
+                                    datasets: [
+                                        { label: '左啞鈴總重 (lbs)', data: leftData, borderColor: '#8B5A2B', tension: 0.2 },
+                                        { label: '右啞鈴總重 (lbs)', data: rightData, borderColor: '#B55B4A', tension: 0.2 }
+                                    ]
+                                },
+                                options: { responsive: true, maintainAspectRatio: true }
+                            });
+                        } else {
+                            const label = chartTypeSelect.value === 'reps' ? '下數進步' : '總重量 (kg)';
+                            const data = chartTypeSelect.value === 'reps' ? values : values;
+                            currentChart = new Chart(ctx, {
+                                type: 'line',
+                                data: { labels, datasets: [{ label, data, borderColor: '#8B5A2B', tension: 0.2 }] },
+                                options: { responsive: true, maintainAspectRatio: true }
+                            });
+                        }
+                    } else if (currentChart) { currentChart.destroy(); currentChart = null; }
+                }
+            }
+
+            modalDiv.innerHTML = `
+                <div class="report-container">
+                    <div class="report-title">📊 訓練報表</div>
+                    <div class="filter-bar">
+                        <select id="reportFilterType">
+                            <option value="all">📅 全部時間</option>
+                            <option value="week" selected>📅 本週</option>
+                            <option value="month">📆 本月</option>
+                            <option value="custom">📌 自訂</option>
+                        </select>
+                        <div id="customDateRange" style="display:none; gap:8px; flex-wrap:wrap;">
+                            <input type="date" id="customStart">
+                            <span>～</span>
+                            <input type="date" id="customEnd">
+                        </div>
+                        <select id="categoryFilter">
+                            <option value="all">全部項目</option>
+                            <option value="上身">上身</option>
+                            <option value="下身">下身</option>
+                        </select>
+                        <button id="applyFilterBtn" class="btn-small">套用</button>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-card"><div class="stat-number" id="reportTotalReps">0</div><div>總訓練次數</div></div>
+                    </div>
+                    <div><strong>📋 各項目訓練頻率</strong><div id="reportFreqList" class="project-list"></div></div>
+                    <div><strong>🏆 各項目最大重量與下數</strong><div id="reportMaxList" class="project-list"></div></div>
+                    <div><strong>📈 進步曲線</strong>
+                        <select id="chartProjectSelect" style="margin-right:8px;"><option>-- 選擇項目 --</option></select>
+                        <select id="chartTypeSelect"><option value="reps">下數曲線</option><option value="weight">重量曲線</option></select>
+                        <canvas id="progressChart" width="400" height="180" style="width:100%; height:auto; background:white; border-radius:16px; margin-top:8px;"></canvas>
+                    </div>
+                    <div><strong>⏫ 階段升級歷史</strong><div id="phaseHistoryList" class="project-list"></div></div>
+                    <div style="display:flex; justify-content:flex-end; margin-top:20px;"><button class="btn" id="closeReportBtn">關閉</button></div>
+                </div>
+            `;
+            document.body.appendChild(modalDiv);
+
+            const filterSelect = document.getElementById('reportFilterType');
+            const customDiv = document.getElementById('customDateRange');
+            filterSelect.addEventListener('change', () => {
+                filterType = filterSelect.value;
+                customDiv.style.display = filterType === 'custom' ? 'flex' : 'none';
+                if (filterType !== 'custom') refreshReport();
+            });
+            document.getElementById('categoryFilter').addEventListener('change', (e) => {
+                categoryFilter = e.target.value;
+                refreshReport();
+            });
+            document.getElementById('applyFilterBtn').addEventListener('click', () => {
+                if (filterType === 'custom') {
+                    customStart = document.getElementById('customStart').value;
+                    customEnd = document.getElementById('customEnd').value;
+                    if (!customStart || !customEnd) { alert("請填寫起訖日期"); return; }
+                }
+                refreshReport();
+            });
+            document.getElementById('closeReportBtn').addEventListener('click', () => modalDiv.remove());
+            document.getElementById('chartProjectSelect')?.addEventListener('change', refreshReport);
+            document.getElementById('chartTypeSelect')?.addEventListener('change', refreshReport);
+            filterType = 'week';
+            filterSelect.value = 'week';
+            customDiv.style.display = 'none';
+            categoryFilter = 'all';
+            document.getElementById('categoryFilter').value = 'all';
+            refreshReport();
+        }
+
+        // ==================== 渲染主畫面 ====================
+        function render() {
+            const app = document.getElementById('app');
+            if (!app) return;
+            const phaseSeconds = phasesTime[currentPhase] || 160;
+            if (!timerRunning) timerSeconds = phaseSeconds;
+            const grouped = {};
+            [...records].sort((a,b)=> new Date(b.date)-new Date(a.date)).forEach(rec => { if(!grouped[rec.date]) grouped[rec.date]=[]; grouped[rec.date].push(rec); });
+            const todayStr = new Date().toISOString().slice(0,10);
+            const todayRecords = records.filter(r => r.date === todayStr);
+
+            app.innerHTML = `
+                <div class="card">
+                    <div class="flex-row"><div style="flex:1"><label>使用者</label><select id="userSelect">${usersList.map(u=>`<option value="${u}" ${u===currentUser?'selected':''}>${u}</option>`).join('')}</select></div><button class="btn-small btn-outline" id="addUserBtn">＋新增使用者</button></div>
+                    <div class="flex-row"><span class="badge">階段 ${currentPhase}</span><button class="btn-small btn-outline" id="upgradePhaseBtn">⬆ 升階段</button></div>
+                    <hr><div class="timer" id="timerDisplay">00:00</div>
+                    <div class="timer-buttons"><button class="btn" id="timerStart">▶ 開始</button><button class="btn btn-outline" id="timerPause">⏸ 暫停</button><button class="btn btn-outline" id="timerReset">🔄 重置</button></div>
+                </div>
+                <div class="card"><div class="flex-row"><h3>📝 今日記錄 (${todayStr})</h3><button class="btn" id="newRecordBtn">＋ 新增記錄</button></div>
+                ${todayRecords.length===0?'<p>尚無記錄</p>':todayRecords.map(rec=>{
+                    let weightDisplay = '';
+                    if (rec.isDumbbell) {
+                        const left = rec.dTopLeft + rec.dBotLeft;
+                        const right = rec.dTopRight + rec.dBotRight;
+                        weightDisplay = `🏋️ 左${left} lbs / 右${right} lbs`;
+                    } else {
+                        let kg = rec.weightKg || 0;
+                        let lbs = rec.weightLbs || 0;
+                        weightDisplay = `⚖️ ${kg} kg + ${lbs} lbs`;
+                    }
+                    const addOptionMap = { 'add': '加', 'minus': '減', 'keep': '保留' };
+                    const addDisplay = `${addOptionMap[rec.addOption] || '加'} ${rec.addKg||0} kg + ${rec.addLbs||0} lbs`;
+                    let devDisplay = '';
+                    if (rec.deviationType === 'equal') devDisplay = '平標準';
+                    else if (rec.deviationType === 'fast') devDisplay = `快 ${rec.deviationValue} 下`;
+                    else if (rec.deviationType === 'slow') devDisplay = `慢 ${rec.deviationValue} 下`;
+                    return `<div class="record-item"><div><strong>${rec.projectName}</strong> <span class="badge">階段${rec.phase}</span></div>
+                        <div>🏋️ 實際下數: ${rec.reps} / 目標: ${projects.find(p=>p.name===rec.projectName)?.targetReps??'未設定'}</div>
+                        <div>偏差: ${devDisplay}</div>
+                        <div>${weightDisplay}</div>
+                        <div>📈 下次: ${addDisplay}</div>
+                        <div>📝 備註: ${rec.note||'無'}</div>
+                        <div class="flex-buttons"><button class="btn-small btn-outline editRecordBtn" data-id="${rec.id}">✏️ 編輯</button><button class="btn-small btn-danger deleteRecordBtn" data-id="${rec.id}">🗑️ 刪除</button></div></div>`;
+                }).join('')}</div>
+                <div class="card">
+                    <h3>⚙️ 設定</h3>
+                    <details><summary>⏱️ 階段時間設定</summary>${[1,2,3,4,5].map(ph=>`<label>階段${ph} (秒)</label><input type="number" id="phaseTime_${ph}" value="${phasesTime[ph]||0}" step="1">`).join('')}<button id="savePhasesBtn" class="btn">💾 儲存階段時間</button></details>
+                    <details><summary>🏋️ 健身項目管理</summary>
+                        <div id="projectsList">${projects.map((proj,idx)=>`<div class="project-item">
+                            <input type="text" value="${proj.name}" data-proj-index="${idx}" class="projNameInput" placeholder="項目名稱">
+                            <select data-proj-index="${idx}" class="projCategorySelect">
+                                <option value="上身" ${proj.category==='上身'?'selected':''}>上身</option>
+                                <option value="下身" ${proj.category==='下身'?'selected':''}>下身</option>
+                            </select>
+                            <input type="number" placeholder="目標下數" value="${proj.targetReps??''}" data-proj-index="${idx}" class="projTargetInput" style="width:100px;">
+                            <button class="btn-small btn-danger deleteProjBtn" data-index="${idx}">🗑️ 刪除項目</button>
+                        </div>`).join('')}</div>
+                        <div class="flex-row"><input type="text" id="newProjName" placeholder="新項目名稱" style="flex:2;"><select id="newProjCategory"><option value="上身">上身</option><option value="下身">下身</option></select><input type="number" id="newProjTarget" placeholder="目標下數" style="flex:1;"><button id="addProjBtn" class="btn-small">＋ 新增</button></div>
+                        <button id="saveProjectsBtn" class="btn btn-outline">💾 儲存所有項目變更</button>
+                        <p><small>刪除項目不刪歷史記錄</small></p>
+                    </details>
+                    <details><summary>🔔 提醒設定</summary><label class="reminder-checkbox-label"><input type="checkbox" id="reminderEnable" ${reminderEnabled?'checked':''}><span>啟用健身日前一天提醒</span></label><div class="weekdays-wrapper">${['日','一','二','三','四','五','六'].map((day,idx)=>`<label class="day-checkbox"><input type="checkbox" value="${idx}" ${reminderDays.includes(idx)?'checked':''}>週${day}</label>`).join('')}</div><button id="saveReminderBtn" class="btn-small">💾 儲存提醒設定</button></details>
+                    <hr>
+                    <div class="action-buttons"><button id="backupBtn" class="btn">💾 備份資料</button><label for="restoreFileInput" class="btn btn-outline">📂 還原備份</label><label for="mergeFileInput" class="btn btn-outline">🔄 合併備份</label><input type="file" id="restoreFileInput" accept=".json" style="display:none"><input type="file" id="mergeFileInput" accept=".json" style="display:none"></div>
+                    <div style="margin-top:16px;"><button id="reportBtn" class="btn" style="background:#A67B5B;">📊 產生報表</button></div>
+                </div>
+                <div class="card"><h3>📜 歷史記錄</h3>${Object.keys(grouped).length===0?'<p>尚無記錄</p>':Object.entries(grouped).map(([date,recs])=>`<div class="history-date">📅 ${date}</div>${recs.map(rec=>{
+                    let weightDisplay = '';
+                    if (rec.isDumbbell) {
+                        const left = rec.dTopLeft + rec.dBotLeft;
+                        const right = rec.dTopRight + rec.dBotRight;
+                        weightDisplay = `左${left} lbs / 右${right} lbs`;
+                    } else {
+                        weightDisplay = `${rec.weightKg||0} kg + ${rec.weightLbs||0} lbs`;
+                    }
+                    const addOptionMap = { 'add': '加', 'minus': '減', 'keep': '保留' };
+                    const addDisplay = `${addOptionMap[rec.addOption] || '加'} ${rec.addKg||0} kg + ${rec.addLbs||0} lbs`;
+                    let devDisplay = '';
+                    if (rec.deviationType === 'equal') devDisplay = '平標準';
+                    else if (rec.deviationType === 'fast') devDisplay = `快 ${rec.deviationValue} 下`;
+                    else if (rec.deviationType === 'slow') devDisplay = `慢 ${rec.deviationValue} 下`;
+                    return `<div class="record-item"><strong>${rec.projectName}</strong> (階段${rec.phase})<br>實際下數: ${rec.reps} | 偏差: ${devDisplay}<br>重量: ${weightDisplay}<br>下次: ${addDisplay}<br>備註: ${rec.note||'無'}<div class="flex-buttons"><button class="btn-small btn-outline editHistoryBtn" data-id="${rec.id}">✏️ 編輯</button><button class="btn-small btn-danger deleteRecordBtn" data-id="${rec.id}">🗑️ 刪除</button></div></div>`;
+                }).join('')}`).join('')}</div>
+            `;
+
+            // 事件綁定
+            document.getElementById('userSelect')?.addEventListener('change',(e)=>{currentUser=e.target.value; loadUserData(currentUser); loadGlobal(); if(timerInterval) clearInterval(timerInterval); timerRunning=false; render();});
+            document.getElementById('addUserBtn')?.addEventListener('click',()=>{const n=prompt("新使用者名稱"); if(n&&addUser(n)){currentUser=n; loadUserData(currentUser); render();} else alert("無效或已存在");});
+            document.getElementById('upgradePhaseBtn')?.addEventListener('click', upgradePhase);
+            document.getElementById('newRecordBtn')?.addEventListener('click', ()=>showRecordModal());
+            document.getElementById('savePhasesBtn')?.addEventListener('click',()=>{for(let i=1;i<=5;i++){let v=parseInt(document.getElementById(`phaseTime_${i}`).value); if(!isNaN(v)) phasesTime[i]=v;} saveAll(); alert("階段時間已儲存"); render();});
+            document.getElementById('addProjBtn')?.addEventListener('click',()=>{
+                let name=document.getElementById('newProjName').value.trim();
+                let category=document.getElementById('newProjCategory').value;
+                let target=document.getElementById('newProjTarget').value;
+                if(!name) return;
+                projects.push({name, category, targetReps: target?parseInt(target):null});
+                saveAll(); render();
+            });
+            document.getElementById('saveProjectsBtn')?.addEventListener('click',()=>{
+                let nameInputs=document.querySelectorAll('.projNameInput');
+                let categorySelects=document.querySelectorAll('.projCategorySelect');
+                let targetInputs=document.querySelectorAll('.projTargetInput');
+                for(let i=0;i<nameInputs.length;i++){
+                    if(projects[i]){
+                        projects[i].name=nameInputs[i].value;
+                        projects[i].category=categorySelects[i].value;
+                        let val=parseInt(targetInputs[i].value);
+                        projects[i].targetReps=isNaN(val)?null:val;
+                    }
+                }
+                saveAll(); alert("項目已儲存"); render();
+            });
+            document.querySelectorAll('.deleteProjBtn').forEach(btn=>btn.addEventListener('click',(e)=>{let idx=parseInt(btn.dataset.index); if(confirm(`刪除「${projects[idx].name}」？`)){projects.splice(idx,1); saveAll(); render();}}));
+            document.getElementById('saveReminderBtn')?.addEventListener('click',()=>{reminderEnabled=document.getElementById('reminderEnable').checked; let checks=document.querySelectorAll('.day-checkbox input'); reminderDays=Array.from(checks).filter(cb=>cb.checked).map(cb=>parseInt(cb.value)); saveGlobal(); lastReminderWeek={}; saveAll(); alert("提醒設定已儲存");});
+            document.getElementById('backupBtn')?.addEventListener('click', exportAllData);
+            const restoreInput=document.getElementById('restoreFileInput'); if(restoreInput) restoreInput.addEventListener('change',(e)=>{if(e.target.files.length){if(confirm("還原會覆蓋所有資料，繼續？")) importAllData(e.target.files[0]); restoreInput.value='';}});
+            const mergeInput=document.getElementById('mergeFileInput'); if(mergeInput) mergeInput.addEventListener('change',(e)=>{if(e.target.files.length){if(confirm("合併將新增缺少的記錄，並自動備份目前資料。繼續？")) mergeBackup(e.target.files[0]); mergeInput.value='';}});
+            document.getElementById('reportBtn')?.addEventListener('click', showReport);
+            const timerSpan=document.getElementById('timerDisplay'); const startBtn=document.getElementById('timerStart'); const pauseBtn=document.getElementById('timerPause'); const resetBtn=document.getElementById('timerReset');
+            if(timerSpan) initTimerDisplay(timerSpan, startBtn, pauseBtn, resetBtn);
+            document.querySelectorAll('.deleteRecordBtn').forEach(btn=>btn.addEventListener('click',(e)=>{const id=parseInt(btn.dataset.id); if(confirm("刪除此記錄？")) deleteRecord(id);}));
+            document.querySelectorAll('.editRecordBtn, .editHistoryBtn').forEach(btn=>btn.addEventListener('click',(e)=>{const id=parseInt(btn.dataset.id); const record=records.find(r=>r.id===id); if(record) showRecordModal(record);}));
+            checkReminder();
+        }
+
+        // ==================== 新增/編輯記錄彈窗 ====================
+        function showRecordModal(record=null){
+            const isEdit=!!record;
+            const date=record?record.date:new Date().toISOString().slice(0,10);
+            const projectName=record?record.projectName:(projects[0]?.name||'');
+            const reps=record?record.reps:'';
+            const weightKg=record?record.weightKg:'';
+            const weightLbs=record?record.weightLbs:'';
+            const addKg=record?record.addKg:'';
+            const addLbs=record?record.addLbs:'';
+            const addOption=record?record.addOption:'add';
+            const note=record?record.note:'';
+            const isDumbbell=record?record.isDumbbell:false;
+            const dTopLeft=record?record.dTopLeft:'';
+            const dBotLeft=record?record.dBotLeft:'';
+            const dTopRight=record?record.dTopRight:'';
+            const dBotRight=record?record.dBotRight:'';
+            const deviationType=record?record.deviationType:'equal';
+            const deviationValue=record?record.deviationValue:'';
+
+            function getCategory(projName){
+                const proj=projects.find(p=>p.name===projName);
+                return proj?proj.category:'上身';
+            }
+
+            // 動態產生重量輸入區 - 完全根據 checkbox 狀態，不受分類限制
+            function weightInputHtml(useDumbbellChecked){
+                if(useDumbbellChecked){
+                    return `
+                        <label>🏋️ 啞鈴重量 (lbs)</label>
+                        <div class="weight-grid">
+                            <div><label>左上</label><input type="number" step="0.5" id="dTopLeft" value="${dTopLeft}" placeholder="0"></div>
+                            <div><label>右上</label><input type="number" step="0.5" id="dTopRight" value="${dTopRight}" placeholder="0"></div>
+                            <div><label>左下</label><input type="number" step="0.5" id="dBotLeft" value="${dBotLeft}" placeholder="0"></div>
+                            <div><label>右下</label><input type="number" step="0.5" id="dBotRight" value="${dBotRight}" placeholder="0"></div>
+                        </div>
+                        <div class="weight-total" id="dumbbellTotal">左總重: 0 lbs | 右總重: 0 lbs</div>
+                    `;
+                } else {
+                    return `
+                        <label>⚖️ 重量 (kg + lbs)</label>
+                        <div class="flex-row" style="gap:8px;">
+                            <input type="number" step="0.5" id="weightKg" value="${weightKg}" placeholder="kg" style="flex:1;">
+                            <input type="number" step="0.5" id="weightLbs" value="${weightLbs}" placeholder="lbs" style="flex:1;">
+                        </div>
+                    `;
+                }
+            }
+
+            // 建立彈窗HTML
+            const modalHtml = `
+                <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:3000;" id="modalOverlay">
+                    <div style="background:white; border-radius:28px; padding:24px; width:90%; max-width:400px; max-height:85vh; overflow:auto;">
+                        <h3>${isEdit?'✏️ 編輯記錄':'➕ 新增記錄'}</h3>
+                        <label>📅 日期</label><input type="date" id="modalDate" value="${date}">
+                        <label>🏋️ 項目</label>
+                        <select id="modalProject">
+                            ${projects.map(p => `<option value="${p.name}" ${p.name===projectName?'selected':''}>${p.name}</option>`).join('')}
+                        </select>
+                        <div class="dumbbell-checkbox-wrapper">
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; width:100%;">
+                                <input type="checkbox" id="useDumbbell" ${isDumbbell?'checked':''}>
+                                <span>🏋️ 使用啞鈴</span>
+                            </label>
+                        </div>
+                        <div id="weightInputArea">
+                            ${weightInputHtml(isDumbbell)}
+                        </div>
+                        <label>✅ 實際做到下數</label><input type="number" id="modalReps" value="${reps}" step="1">
+                        <label>📊 偏差 (相對於標準時間)</label>
+                        <div class="deviation-row">
+                            <select id="deviationType">
+                                <option value="equal" ${deviationType==='equal'?'selected':''}>平標準</option>
+                                <option value="fast" ${deviationType==='fast'?'selected':''}>快</option>
+                                <option value="slow" ${deviationType==='slow'?'selected':''}>慢</option>
+                            </select>
+                            <input type="number" step="1" id="deviationValue" value="${deviationValue}" placeholder="下數" class="${deviationType!=='equal'?'visible':''}">
+                        </div>
+                        <label>📈 下次重量調整</label>
+                        <div class="flex-row" style="gap:8px;">
+                            <select id="addOption" style="flex:1;">
+                                <option value="add" ${addOption==='add'?'selected':''}>加</option>
+                                <option value="minus" ${addOption==='minus'?'selected':''}>減</option>
+                                <option value="keep" ${addOption==='keep'?'selected':''}>保留</option>
+                            </select>
+                            <input type="number" step="0.5" id="addKg" value="${addKg}" placeholder="kg" style="flex:1;">
+                            <input type="number" step="0.5" id="addLbs" value="${addLbs}" placeholder="lbs" style="flex:1;">
+                        </div>
+                        <label>📝 動作備註</label><textarea id="modalNote" rows="2">${note}</textarea>
+                        <button class="btn btn-outline" id="copyLastBtn" style="margin:8px 0;">📋 複製上一次記錄</button>
+                        <div style="display:flex; gap:12px;"><button class="btn" id="modalSaveBtn">💾 儲存</button><button class="btn-outline btn" id="modalCancelBtn">取消</button></div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const overlay=document.getElementById('modalOverlay');
+
+            // 控制偏差數字輸入框顯示
+            function toggleDeviationInput() {
+                const type = document.getElementById('deviationType').value;
+                const input = document.getElementById('deviationValue');
+                if (type === 'equal') {
+                    input.classList.remove('visible');
+                    input.value = '';
+                } else {
+                    input.classList.add('visible');
+                    if (!input.value) input.value = 1;
+                }
+            }
+            document.getElementById('deviationType').addEventListener('change', toggleDeviationInput);
+            toggleDeviationInput();
+
+            // 動態更新重量輸入區（無分類限制）
+            function updateWeightArea(){
+                const useDumbbell = document.getElementById('useDumbbell').checked;
+                const area = document.getElementById('weightInputArea');
+                // 保存當前 kg/lbs 值以備切換時保留
+                const kgVal = document.getElementById('weightKg')?.value||'';
+                const lbsVal = document.getElementById('weightLbs')?.value||'';
+                const tlVal = document.getElementById('dTopLeft')?.value||'';
+                const blVal = document.getElementById('dBotLeft')?.value||'';
+                const trVal = document.getElementById('dTopRight')?.value||'';
+                const brVal = document.getElementById('dBotRight')?.value||'';
+
+                let html = '';
+                if (useDumbbell) {
+                    html = `
+                        <label>🏋️ 啞鈴重量 (lbs)</label>
+                        <div class="weight-grid">
+                            <div><label>左上</label><input type="number" step="0.5" id="dTopLeft" value="${tlVal}" placeholder="0"></div>
+                            <div><label>右上</label><input type="number" step="0.5" id="dTopRight" value="${trVal}" placeholder="0"></div>
+                            <div><label>左下</label><input type="number" step="0.5" id="dBotLeft" value="${blVal}" placeholder="0"></div>
+                            <div><label>右下</label><input type="number" step="0.5" id="dBotRight" value="${brVal}" placeholder="0"></div>
+                        </div>
+                        <div class="weight-total" id="dumbbellTotal">左總重: 0 lbs | 右總重: 0 lbs</div>
+                    `;
+                } else {
+                    html = `
+                        <label>⚖️ 重量 (kg + lbs)</label>
+                        <div class="flex-row" style="gap:8px;">
+                            <input type="number" step="0.5" id="weightKg" value="${kgVal}" placeholder="kg" style="flex:1;">
+                            <input type="number" step="0.5" id="weightLbs" value="${lbsVal}" placeholder="lbs" style="flex:1;">
+                        </div>
+                    `;
+                }
+                area.innerHTML = html;
+                // 為啞鈴輸入綁定總重更新
+                if (useDumbbell) {
+                    const inputs = area.querySelectorAll('input');
+                    inputs.forEach(inp => {
+                        inp.addEventListener('input', function() {
+                            const tl = parseFloat(document.getElementById('dTopLeft')?.value)||0;
+                            const bl = parseFloat(document.getElementById('dBotLeft')?.value)||0;
+                            const tr = parseFloat(document.getElementById('dTopRight')?.value)||0;
+                            const br = parseFloat(document.getElementById('dBotRight')?.value)||0;
+                            const left = tl + bl;
+                            const right = tr + br;
+                            const totalSpan = document.getElementById('dumbbellTotal');
+                            if (totalSpan) totalSpan.innerText = `左總重: ${left} lbs | 右總重: ${right} lbs`;
+                        });
+                    });
+                }
+            }
+
+            // 監聽 checkbox 變更
+            document.getElementById('useDumbbell').addEventListener('change', function() {
+                updateWeightArea();
+            });
+            // 監聽項目變更（僅用於複製時可能更新，但不影響 checkbox 可用性）
+            document.getElementById('modalProject').addEventListener('change', function() {
+                // 不限制checkbox，只更新重量區（保留當前勾選狀態）
+                updateWeightArea();
+            });
+
+            // 複製上一次記錄
+            document.getElementById('copyLastBtn').onclick=()=>{
+                const proj=document.getElementById('modalProject').value;
+                const last=getLastRecordByProject(proj);
+                if(last){
+                    document.getElementById('modalDate').value=last.date;
+                    document.getElementById('modalReps').value=last.reps;
+                    document.getElementById('addOption').value=last.addOption||'add';
+                    document.getElementById('addKg').value=last.addKg||0;
+                    document.getElementById('addLbs').value=last.addLbs||0;
+                    document.getElementById('modalNote').value=last.note||'';
+                    document.getElementById('deviationType').value=last.deviationType||'equal';
+                    document.getElementById('deviationValue').value=last.deviationValue||'';
+                    toggleDeviationInput();
+                    const checkbox = document.getElementById('useDumbbell');
+                    if(last.isDumbbell){
+                        checkbox.checked = true;
+                        updateWeightArea();
+                        setTimeout(()=>{
+                            document.getElementById('dTopLeft').value=last.dTopLeft||0;
+                            document.getElementById('dBotLeft').value=last.dBotLeft||0;
+                            document.getElementById('dTopRight').value=last.dTopRight||0;
+                            document.getElementById('dBotRight').value=last.dBotRight||0;
+                        }, 50);
+                    } else {
+                        checkbox.checked = false;
+                        updateWeightArea();
+                        setTimeout(()=>{
+                            document.getElementById('weightKg').value=last.weightKg||0;
+                            document.getElementById('weightLbs').value=last.weightLbs||0;
+                        }, 50);
+                    }
+                } else {
+                    alert('無此項目的歷史記錄');
+                }
+            };
+
+            // 儲存
+            document.getElementById('modalSaveBtn').onclick=()=>{
+                const ndate=document.getElementById('modalDate').value;
+                const nproj=document.getElementById('modalProject').value;
+                const nreps=document.getElementById('modalReps').value;
+                const naddOption=document.getElementById('addOption').value;
+                const naddKg=document.getElementById('addKg').value;
+                const naddLbs=document.getElementById('addLbs').value;
+                const nnote=document.getElementById('modalNote').value;
+                const ndevType=document.getElementById('deviationType').value;
+                const ndevValue=ndevType==='equal'?0:parseInt(document.getElementById('deviationValue').value)||0;
+                if(!nreps){alert("請填寫下數"); return;}
+                const useDumbbell=document.getElementById('useDumbbell').checked;
+                let weightData={};
+                if(useDumbbell){
+                    const tl=parseFloat(document.getElementById('dTopLeft')?.value)||0;
+                    const bl=parseFloat(document.getElementById('dBotLeft')?.value)||0;
+                    const tr=parseFloat(document.getElementById('dTopRight')?.value)||0;
+                    const br=parseFloat(document.getElementById('dBotRight')?.value)||0;
+                    weightData={isDumbbell:true, dTopLeft:tl, dBotLeft:bl, dTopRight:tr, dBotRight:br, weightKg:0, weightLbs:0};
+                } else {
+                    const kg=parseFloat(document.getElementById('weightKg')?.value)||0;
+                    const lbs=parseFloat(document.getElementById('weightLbs')?.value)||0;
+                    weightData={isDumbbell:false, dTopLeft:0, dBotLeft:0, dTopRight:0, dBotRight:0, weightKg:kg, weightLbs:lbs};
+                }
+                if(isEdit){
+                    updateRecord(record.id, {
+                        date:ndate, projectName:nproj, reps:parseInt(nreps)||0,
+                        addOption:naddOption, addKg:parseFloat(naddKg)||0, addLbs:parseFloat(naddLbs)||0,
+                        note:nnote,
+                        deviationType:ndevType, deviationValue:ndevValue,
+                        ...weightData
+                    });
+                } else {
+                    addRecord(ndate, nproj, nreps,
+                        weightData.weightKg, weightData.weightLbs,
+                        parseFloat(naddKg)||0, parseFloat(naddLbs)||0, naddOption, nnote,
+                        weightData.isDumbbell, weightData.dTopLeft, weightData.dBotLeft, weightData.dTopRight, weightData.dBotRight,
+                        ndevType, ndevValue
+                    );
+                }
+                overlay.remove();
+            };
+            document.getElementById('modalCancelBtn').onclick=()=>overlay.remove();
+            overlay.onclick=(e)=>{if(e.target===overlay) overlay.remove();};
+            setTimeout(updateWeightArea, 50);
+        }
+
+        loadGlobal(); loadUserData(currentUser);
+        if(window.Notification && Notification.permission==="default") Notification.requestPermission();
+        render();
+    })();
+</script>
+</body>
+</html>
